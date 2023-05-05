@@ -1,8 +1,19 @@
 import re
 import PyPDF2
+import docx
 
 
 heading_lines = 5
+
+
+def extract_docx_text(file_path):
+    doc = docx.Document(file_path)
+    full_text = []
+
+    for paragraph in doc.paragraphs:
+        full_text.append(paragraph.text)
+
+    return '\n'.join(full_text)
 
 
 def get_sentences(filePath: str) -> list[str]:
