@@ -1,4 +1,3 @@
-from typing import List
 import re
 import PyPDF2
 
@@ -6,13 +5,13 @@ import PyPDF2
 heading_lines = 5
 
 
-def get_sentences(filePath: str) -> List[str]:
+def get_sentences(filePath: str) -> list[str]:
     text = read_pdf_contents(filePath)
     sentences = split_into_sentences(text)
     return sentences
 
 
-def sanitize_text_list(text_list):
+def sanitize_text_list(text_list: list[str]):
     sanitized_list = []
     for text in text_list:
         sanitized_text = re.sub(r'\s+', ' ', text).strip()
@@ -20,8 +19,32 @@ def sanitize_text_list(text_list):
     return sanitized_list
 
 
-def split_into_sentences(text: str) -> List[str]:
-    list_of_strings = text.split(".")
+def split_text_into_chunks(text, min_sentences=3):
+    sentences = text.split('.')
+    chunks = []
+
+    chunk = ""
+    count = 0
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if sentence:
+            chunk += sentence + '. '
+            count += 1
+
+            if count >= min_sentences:
+                chunks.append(chunk.strip())
+                chunk = ""
+                count = 0
+
+    # Append the last chunk if there are any remaining sentences
+    if chunk.strip():
+        chunks.append(chunk.strip())
+
+    return chunks
+
+
+def split_into_sentences(text: str) -> list[str]:
+    list_of_strings = split_text_into_chunks(text)
     sanitized_text = sanitize_text_list(list_of_strings)
     return sanitized_text
 
