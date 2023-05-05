@@ -1,9 +1,14 @@
 import re
 import PyPDF2
 import docx
+import openai
 
 
 heading_lines = 5
+
+
+def get_embedding(text, model="text-embedding-ada-002"):
+    return openai.Embedding.create(input=[text], model=model)['data'][0]['embedding']
 
 
 def extract_docx_text(file_path):

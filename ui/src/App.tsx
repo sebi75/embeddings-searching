@@ -21,6 +21,31 @@ function App() {
 		}
 	};
 
+	const handleFileChange = async (
+		event: React.ChangeEvent<HTMLInputElement>
+	) => {
+		const file = event.target.files?.[0];
+		console.log(file);
+		if (file) {
+			const formData = new FormData();
+			formData.append('file', file);
+			try {
+				setIsLoading(true);
+				const response = await fetch('http://localhost:5000/index', {
+					method: 'POST',
+					body: formData,
+				});
+
+				const data = await response.json();
+				setIsLoading(false);
+				console.log(data);
+			} catch (error) {
+				setIsLoading(false);
+				console.log('encountered error', error);
+			}
+		}
+	};
+
 	useEffect(() => {
 		document.body.className = 'dark';
 		testFetch();
@@ -30,8 +55,8 @@ function App() {
 		<div className="flex h-screen w-full items-center justify-center">
 			{!isLoading ? (
 				<div className="grid w-full max-w-sm items-center gap-1.5">
-					<Label htmlFor="picture">Picture</Label>
-					<Input id="picture" type="file" />
+					<Label htmlFor="picture">Document</Label>
+					<Input id="picture" type="file" onChange={handleFileChange} />
 				</div>
 			) : (
 				<div className="flex flex-col items-center justify-center">
