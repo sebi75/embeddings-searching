@@ -20,7 +20,7 @@ export const ThemeToggleSwitch: React.FC = () => {
 			<div className="mr-2">
 				<Sun />
 			</div>
-			<Switch onCheckedChange={handleThemeChange} defaultChecked={enabled} />
+			<Switch onCheckedChange={handleThemeChange} checked={enabled} />
 			<div className="ml-2">
 				<Moon />
 			</div>

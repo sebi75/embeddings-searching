@@ -27,9 +27,9 @@ const getFilenames = async () => {
 };
 
 function App() {
+	const [filenames, setFilenames] = useState<string[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const [filenames, setFilenames] = useState([]);
-	// const [selected];
+	const [selectedDocument, setSelectedDocument] = useState('');
 
 	const getSavedFilenames = async () => {
 		try {
@@ -46,7 +46,11 @@ function App() {
 	};
 
 	const handleFileSelect = async (filename: string) => {
-		console.log('selected file: ', filename);
+		setSelectedDocument(filename);
+	};
+
+	const handleIndexNewDocument = () => {
+		setSelectedDocument('');
 	};
 
 	useEffect(() => {
@@ -91,13 +95,26 @@ function App() {
 							<p className="my-3">No documents indexed yet</p>
 						)}
 					</div>
-					<Button variant="outline" className="w-full">
+					<Button
+						variant="outline"
+						className="w-full"
+						onClick={handleIndexNewDocument}
+					>
 						Index New Document
 					</Button>
 				</div>
 
 				{/* searching and indexing */}
-				<div></div>
+				<div className="p-3">
+					{selectedDocument ? (
+						<SearchDocument filename={selectedDocument} />
+					) : (
+						<IndexDocument
+							setFilenames={setFilenames}
+							setIsLoading={setIsLoading}
+						/>
+					)}
+				</div>
 			</div>
 			<div className="absolute top-2 right-2">
 				<ThemeToggleSwitch />
@@ -105,6 +122,16 @@ function App() {
 		</div>
 	);
 }
+
+type SearchDocumentProps = {
+	filename: string;
+};
+
+const SearchDocument: FunctionComponent<SearchDocumentProps> = ({
+	filename,
+}) => {
+	return <div>search document component for {filename}</div>;
+};
 
 type IndexDocumentProps = {
 	setFilenames: Dispatch<SetStateAction<string[]>>;
@@ -156,15 +183,27 @@ const IndexDocument: FunctionComponent<IndexDocumentProps> = ({
 	};
 	return (
 		<div>
+			<h1>Index a new document</h1>
+			<p className="text-gray-400">
+				Add a new document and wait until the indexing is done.
+			</p>
+			<p className="text-gray-400">
+				After that, you will be able to select it from the list and perform
+				searching
+			</p>
 			{!isIndexing ? (
-				<div className="grid w-full max-w-sm items-center gap-1.5">
-					<Label htmlFor="picture">Document</Label>
-					<Input id="picture" type="file" onChange={handleFileChange} />
+				<div className="my-5">
+					<h1>Upload document</h1>
+					<div className="grid w-full max-w-sm items-center gap-1.5">
+						<Label htmlFor="picture">Document</Label>
+						<Input id="picture" type="file" onChange={handleFileChange} />
+					</div>
 				</div>
 			) : (
 				<div className="flex flex-col items-center justify-center">
 					<LoadingSpinner />
-					<h1>It may take a few minutes for the text to be indexed....</h1>
+					<h1>Depending on the size of the document,</h1>
+					<h1>it may take a few minutes for the text to be indexed....</h1>
 				</div>
 			)}
 		</div>
