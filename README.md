@@ -2,6 +2,8 @@
 
 This project is a web application that offers a modern user interface for uploading and searching documents using natural language. It consists of two main components: a Vite React app for the user interface, and a Python Flask server for handling all the logic.
 
+![photo of the app](https://user-images.githubusercontent.com/36008268/236631396-a9ecd9fa-bf9c-454d-a3e1-202ce7835d51.png)
+
 ## Folder Structure
 
 The project is organized into two main folders:
