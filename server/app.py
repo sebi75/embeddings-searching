@@ -13,7 +13,6 @@ CORS(app)
 
 @app.route("/ping", methods=["GET"])
 def ping():
-    time.sleep(3)
     response = {"message": "pong!"}
     return jsonify(response)
 
@@ -29,9 +28,17 @@ def index():
 
     if file and allowed_file(file.filename):
         filename = file.filename
+        file.save(os.path.join(
+            app.config['UPLOAD_FOLDER'], filename))
         return jsonify({'message': f'File {filename} uploaded successfully'}), 200
     else:
         return jsonify({'error': 'File type not allowed'}), 400
+
+
+@app.route("/getFilenames", methods=["GET"])
+def getSavedUploads():
+    filenames = os.listdir(app.config['UPLOAD_FOLDER'])
+    return jsonify(list(filter(lambda fileName: fileName != '.gitkeep', filenames))), 200
 
 
 if __name__ == "__main__":

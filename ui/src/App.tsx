@@ -1,20 +1,128 @@
-import { useState, useEffect } from 'react';
+import {
+	useState,
+	useEffect,
+	Dispatch,
+	SetStateAction,
+	FunctionComponent,
+} from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LoadingSpinner } from './components/loading-spinner';
+import config from '@/config';
+import { ThemeToggleSwitch } from './components/theme-switch';
+import { Button } from './components/ui/button';
+
+const getFilenames = async () => {
+	try {
+		const response = await fetch(`${config.API_URL}/getFilenames`, {
+			method: 'GET',
+		});
+
+		const data = await response.json();
+
+		return data;
+	} catch (error: any) {
+		throw new Error(error);
+	}
+};
 
 function App() {
 	const [isLoading, setIsLoading] = useState(false);
-	const testFetch = async () => {
+	const [filenames, setFilenames] = useState([]);
+	// const [selected];
+
+	const getSavedFilenames = async () => {
 		try {
 			setIsLoading(true);
-			const response = await fetch('http://localhost:5000/ping', {
-				method: 'GET',
-			});
 
-			const data = await response.json();
+			const data = await getFilenames();
+
+			setFilenames(data);
 			setIsLoading(false);
-			console.log(data);
+		} catch (error) {
+			setIsLoading(false);
+			console.log('encountered error', error);
+		}
+	};
+
+	const handleFileSelect = async (filename: string) => {
+		console.log('selected file: ', filename);
+	};
+
+	useEffect(() => {
+		document.body.className = 'dark';
+
+		if (!filenames || filenames.length === 0) {
+			getSavedFilenames();
+		}
+	}, []);
+
+	if (isLoading) {
+		return (
+			<div className="flex h-screen w-full items-center justify-center">
+				<LoadingSpinner />
+				<h1>Loading content...</h1>
+			</div>
+		);
+	}
+
+	return (
+		<div className="flex h-screen w-full items-center justify-center">
+			<div className="flex flex-row container pl-0 h-[650px] rounded-lg border">
+				<div className="flex flex-col h-full items-center justify-between p-3 border-r w-[250px]">
+					<div className="flex flex-col items-center">
+						<div className="flex flex-col">
+							<Label>Indexed documents</Label>
+							<Label className="text-gray-400">*Ready to be searched</Label>
+						</div>
+						{filenames && filenames.length > 0 ? (
+							<ul className="flex flex-col p-3">
+								{filenames.map((filename) => (
+									<Button
+										key={filename}
+										variant="ghost"
+										onClick={() => handleFileSelect(filename)}
+									>
+										{filename}
+									</Button>
+								))}
+							</ul>
+						) : (
+							<p className="my-3">No documents indexed yet</p>
+						)}
+					</div>
+					<Button variant="outline" className="w-full">
+						Index New Document
+					</Button>
+				</div>
+
+				{/* searching and indexing */}
+				<div></div>
+			</div>
+			<div className="absolute top-2 right-2">
+				<ThemeToggleSwitch />
+			</div>
+		</div>
+	);
+}
+
+type IndexDocumentProps = {
+	setFilenames: Dispatch<SetStateAction<string[]>>;
+	setIsLoading: Dispatch<SetStateAction<boolean>>;
+};
+
+const IndexDocument: FunctionComponent<IndexDocumentProps> = ({
+	setFilenames,
+	setIsLoading,
+}) => {
+	const [isIndexing, setIsIndexing] = useState(false);
+
+	const getSavedFilenames = async () => {
+		try {
+			const data = await getFilenames();
+
+			setFilenames(data);
+			setIsLoading(false);
 		} catch (error) {
 			setIsLoading(false);
 			console.log('encountered error', error);
@@ -30,30 +138,25 @@ function App() {
 			const formData = new FormData();
 			formData.append('file', file);
 			try {
-				setIsLoading(true);
-				const response = await fetch('http://localhost:5000/index', {
+				setIsIndexing(true);
+				const response = await fetch(`${config.API_URL}/index`, {
 					method: 'POST',
 					body: formData,
 				});
 
 				const data = await response.json();
-				setIsLoading(false);
+				await getSavedFilenames();
+				setIsIndexing(false);
 				console.log(data);
 			} catch (error) {
-				setIsLoading(false);
+				setIsIndexing(false);
 				console.log('encountered error', error);
 			}
 		}
 	};
-
-	useEffect(() => {
-		document.body.className = 'dark';
-		testFetch();
-	}, []);
-
 	return (
-		<div className="flex h-screen w-full items-center justify-center">
-			{!isLoading ? (
+		<div>
+			{!isIndexing ? (
 				<div className="grid w-full max-w-sm items-center gap-1.5">
 					<Label htmlFor="picture">Document</Label>
 					<Input id="picture" type="file" onChange={handleFileChange} />
@@ -66,6 +169,6 @@ function App() {
 			)}
 		</div>
 	);
-}
+};
 
 export default App;
