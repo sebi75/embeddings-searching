@@ -1,6 +1,5 @@
 import indexing
 import searching
-import numpy as np
 import pandas as pd
 
 
@@ -21,8 +20,6 @@ class CLIApp:
 
         """ Get the search term """
         searchTerm = input("Enter a search term: ")
-        dataframe['embedding'] = dataframe.embedding.apply(
-            eval).apply(np.array)
         res = searching.search(dataframe, searchTerm)
 
         print(res)

@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
 	useState,
 	useEffect,
 	Dispatch,
 	SetStateAction,
 	FunctionComponent,
+	ChangeEvent,
 } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +13,7 @@ import { LoadingSpinner } from './components/loading-spinner';
 import config from '@/config';
 import { ThemeToggleSwitch } from './components/theme-switch';
 import { Button } from './components/ui/button';
+import { useToast } from './components/ui/use-toast';
 
 const getFilenames = async () => {
 	try {
@@ -105,7 +108,7 @@ function App() {
 				</div>
 
 				{/* searching and indexing */}
-				<div className="p-3">
+				<div className="p-3 w-full">
 					{selectedDocument ? (
 						<SearchDocument filename={selectedDocument} />
 					) : (
@@ -130,7 +133,89 @@ type SearchDocumentProps = {
 const SearchDocument: FunctionComponent<SearchDocumentProps> = ({
 	filename,
 }) => {
-	return <div>search document component for {filename}</div>;
+	const toast = useToast();
+	const [searchTerm, setSearchTerm] = useState('');
+	const [searchResults, setSearchResults] = useState<
+		{
+			text: string;
+			score: number;
+		}[]
+	>([]);
+
+	const handleTextChange = (event: ChangeEvent<HTMLInputElement>) => {
+		const value = event.target.value;
+		setSearchTerm(value);
+	};
+
+	const handleTextSearch = async (event: React.FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+
+		try {
+			const url = new URL(`${config.API_URL}/search`);
+			url.searchParams.append('filename', filename);
+			url.searchParams.append('searchTerm', searchTerm);
+			const response = await fetch(url.toString(), {
+				method: 'POST',
+			});
+
+			if (!response.ok) {
+				throw new Error('Encountered an error while searching');
+			}
+
+			const data = await response.json();
+
+			setSearchResults(data);
+			toast.toast({
+				title: 'Success',
+				description: 'Successfully searched document',
+				variant: 'success',
+			});
+		} catch (error) {
+			console.log(error);
+			toast.toast({
+				title: 'Error',
+				description: 'Encountered an error while searching',
+				variant: 'destructive',
+			});
+		}
+	};
+
+	return (
+		<div className="flex flex-col w-full">
+			<h1>Search document: {filename}</h1>
+			<div className="flex w-full flex-col items-center ">
+				<form className="flex flex-row gap-3" onSubmit={handleTextSearch}>
+					<div className="grid w-full max-w-sm items-center gap-1.5">
+						<Label>Enter a search term</Label>
+						<Input
+							type="text"
+							onChange={handleTextChange}
+							placeholder="enter a search term..."
+						/>
+					</div>
+					<Button type="submit" variant="secondary" className="self-end">
+						Search
+					</Button>
+				</form>
+
+				{/* container for the search results  */}
+				<div className="flex flex-col">
+					{searchResults && searchResults.length > 0 ? (
+						<ul className="flex flex-col p-3">
+							{searchResults.map((result) => (
+								<div className="flex flex-row p-3 shadow-lg rounded-lg">
+									<p className="font-bold">{result.score}</p>
+									<p className="ml-3">{result.text}</p>
+								</div>
+							))}
+						</ul>
+					) : (
+						<p className="my-3">No results to show</p>
+					)}
+				</div>
+			</div>
+		</div>
+	);
 };
 
 type IndexDocumentProps = {
@@ -143,6 +228,7 @@ const IndexDocument: FunctionComponent<IndexDocumentProps> = ({
 	setIsLoading,
 }) => {
 	const [isIndexing, setIsIndexing] = useState(false);
+	const toast = useToast();
 
 	const getSavedFilenames = async () => {
 		try {
@@ -152,7 +238,11 @@ const IndexDocument: FunctionComponent<IndexDocumentProps> = ({
 			setIsLoading(false);
 		} catch (error) {
 			setIsLoading(false);
-			console.log('encountered error', error);
+			toast.toast({
+				title: 'Error',
+				description: 'Encountered an error while fetching filenames',
+				variant: 'destructive',
+			});
 		}
 	};
 
@@ -160,24 +250,30 @@ const IndexDocument: FunctionComponent<IndexDocumentProps> = ({
 		event: React.ChangeEvent<HTMLInputElement>
 	) => {
 		const file = event.target.files?.[0];
-		console.log(file);
 		if (file) {
 			const formData = new FormData();
 			formData.append('file', file);
 			try {
 				setIsIndexing(true);
-				const response = await fetch(`${config.API_URL}/index`, {
+				await fetch(`${config.API_URL}/index`, {
 					method: 'POST',
 					body: formData,
 				});
 
-				const data = await response.json();
 				await getSavedFilenames();
 				setIsIndexing(false);
-				console.log(data);
+				toast.toast({
+					title: 'Success',
+					description: 'Successfully indexed document',
+					variant: 'success',
+				});
 			} catch (error) {
 				setIsIndexing(false);
-				console.log('encountered error', error);
+				toast.toast({
+					title: 'Error',
+					description: 'Encountered an error while indexing document',
+					variant: 'destructive',
+				});
 			}
 		}
 	};
