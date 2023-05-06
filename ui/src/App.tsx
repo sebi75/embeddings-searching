@@ -14,6 +14,7 @@ import config from '@/config';
 import { ThemeToggleSwitch } from './components/theme-switch';
 import { Button } from './components/ui/button';
 import { useToast } from './components/ui/use-toast';
+import Footer from './components/footer';
 
 const getFilenames = async () => {
 	try {
@@ -62,6 +63,7 @@ function App() {
 		if (!filenames || filenames.length === 0) {
 			getSavedFilenames();
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	if (isLoading) {
@@ -122,6 +124,7 @@ function App() {
 			<div className="absolute top-2 right-2">
 				<ThemeToggleSwitch />
 			</div>
+			<Footer />
 		</div>
 	);
 }
@@ -135,6 +138,7 @@ const SearchDocument: FunctionComponent<SearchDocumentProps> = ({
 }) => {
 	const toast = useToast();
 	const [searchTerm, setSearchTerm] = useState('');
+	const [isSearching, setIsSearching] = useState(false);
 	const [searchResults, setSearchResults] = useState<
 		{
 			text: string;
@@ -149,6 +153,7 @@ const SearchDocument: FunctionComponent<SearchDocumentProps> = ({
 
 	const handleTextSearch = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
+		setIsSearching(true);
 
 		try {
 			const url = new URL(`${config.API_URL}/search`);
@@ -170,7 +175,9 @@ const SearchDocument: FunctionComponent<SearchDocumentProps> = ({
 				description: 'Successfully searched document',
 				variant: 'success',
 			});
+			setIsSearching(false);
 		} catch (error) {
+			setIsSearching(false);
 			console.log(error);
 			toast.toast({
 				title: 'Error',
@@ -188,31 +195,52 @@ const SearchDocument: FunctionComponent<SearchDocumentProps> = ({
 					<div className="grid w-full max-w-sm items-center gap-1.5">
 						<Label>Enter a search term</Label>
 						<Input
+							disabled={isSearching}
 							type="text"
 							onChange={handleTextChange}
 							placeholder="enter a search term..."
 						/>
 					</div>
-					<Button type="submit" variant="secondary" className="self-end">
+					<Button
+						disabled={isSearching}
+						type="submit"
+						variant="secondary"
+						className="self-end"
+					>
 						Search
 					</Button>
 				</form>
 
 				{/* container for the search results  */}
-				<div className="flex flex-col">
-					{searchResults && searchResults.length > 0 ? (
-						<ul className="flex flex-col p-3">
-							{searchResults.map((result) => (
-								<div className="flex flex-row p-3 shadow-lg rounded-lg">
-									<p className="font-bold">{result.score}</p>
-									<p className="ml-3">{result.text}</p>
-								</div>
-							))}
-						</ul>
-					) : (
-						<p className="my-3">No results to show</p>
-					)}
-				</div>
+				{!isSearching ? (
+					<div className="flex flex-col">
+						{searchResults && searchResults.length > 0 ? (
+							<ul className="flex flex-col p-3">
+								{searchResults.map((result) => (
+									<div className="flex flex-row p-3 shadow-lg rounded-lg my-2">
+										<p
+											className={
+												result.score > 60
+													? 'font-bold text-green-500'
+													: 'font-bold text-red-500'
+											}
+										>
+											{result.score}%
+										</p>
+										<p className="ml-3">{result.text}</p>
+									</div>
+								))}
+							</ul>
+						) : (
+							<p className="my-3">No results to show</p>
+						)}
+					</div>
+				) : (
+					<div className="flex flex-col items-center justify-center">
+						<LoadingSpinner />
+						<h1>Searching...</h1>
+					</div>
+				)}
 			</div>
 		</div>
 	);
