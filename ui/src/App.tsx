@@ -188,9 +188,9 @@ const SearchDocument: FunctionComponent<SearchDocumentProps> = ({
 	};
 
 	return (
-		<div className="flex flex-col w-full">
+		<div className="flex flex-col w-full h-full">
 			<h1>Search document: {filename}</h1>
-			<div className="flex w-full flex-col items-center ">
+			<div className="flex w-full h-full flex-col items-center ">
 				<form className="flex flex-row gap-3" onSubmit={handleTextSearch}>
 					<div className="grid w-full max-w-sm items-center gap-1.5">
 						<Label>Enter a search term</Label>
@@ -236,7 +236,7 @@ const SearchDocument: FunctionComponent<SearchDocumentProps> = ({
 						)}
 					</div>
 				) : (
-					<div className="flex flex-col items-center justify-center">
+					<div className="flex flex-col items-center justify-center h-full">
 						<LoadingSpinner />
 						<h1>Searching...</h1>
 					</div>
